@@ -85,6 +85,23 @@ describe Grim::ImageMagickProcessor do
     end
   end
 
+	describe "#save with custom defines" do
+    before(:each) do
+      @path1 = tmp_path("to_png_spec-1.jpg")
+      @path2 = tmp_path("to_png_spec-2.jpg")
+      @pdf  = Grim::Pdf.new(fixture_path("smoker.pdf"))
+    end
+
+		it "should pass the custom define option to save command" do
+			grim = Grim::ImageMagickProcessor.new
+			cmd = grim._build_save_command(@pdf, 0, @path1, { :define => [
+				'png:include-chunk=none'
+			]})
+
+			expect(cmd.join(' ')).to include('-define png:include-chunk=none')
+		end
+	end
+
   describe "#save with colorspace option" do
     before(:each) do
       @path1 = tmp_path("to_png_spec-1.jpg")

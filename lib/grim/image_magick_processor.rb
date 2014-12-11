@@ -20,19 +20,27 @@ module Grim
     end
 
     def save(pdf, index, path, options)
-      width   = options.fetch(:width,   Grim::WIDTH)
-      density = options.fetch(:density, Grim::DENSITY)
-      quality = options.fetch(:quality, Grim::QUALITY)
-      colorspace = options.fetch(:colorspace, Grim::COLORSPACE)
-      command = [@imagemagick_path, "-resize", width.to_s, "-antialias", "-render",
-        "-quality", quality.to_s, "-colorspace", colorspace,
-        "-interlace", "none", "-density", density.to_s,
-        "#{Shellwords.shellescape(pdf.path)}[#{index}]", path]
-      command.unshift("PATH=#{File.dirname(@ghostscript_path)}:#{ENV['PATH']}") if @ghostscript_path
-
+			command = _build_save_command(pdf, index, path, options)
       result = `#{command.join(' ')}`
 
       $? == 0 || raise(UnprocessablePage, result)
     end
+
+		def _build_save_command(pdf, index, path, options)
+      width   = options.fetch(:width,   Grim::WIDTH)
+      density = options.fetch(:density, Grim::DENSITY)
+      quality = options.fetch(:quality, Grim::QUALITY)
+      colorspace = options.fetch(:colorspace, Grim::COLORSPACE)
+			defines = options.fetch(:define, [])
+      command = [@imagemagick_path, "-resize", width.to_s, "-antialias", "-render",
+        "-quality", quality.to_s, "-colorspace", colorspace,
+        "-interlace", "none", "-density", density.to_s,
+				*defines.map { |define| "-define #{define}" },
+        "#{Shellwords.shellescape(pdf.path)}[#{index}]", path]
+      command.unshift("PATH=#{File.dirname(@ghostscript_path)}:#{ENV['PATH']}") if @ghostscript_path
+
+			return command
+		end
+
   end
 end
